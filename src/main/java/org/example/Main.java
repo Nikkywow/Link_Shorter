@@ -1,114 +1,86 @@
 package org.example;
 
-import org.w3c.dom.ls.LSOutput;
-
 import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.sql.SQLOutput;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Scanner;
-import java.util.SimpleTimeZone;
-import java.util.StringTokenizer;
 
 public class Main {
-
-    public static void main(String[] args) throws IOException, URISyntaxException {
-
-
-//я закончил на моменте когда юзер вводит длинную ссылку, и в бд нет инфы что он когда-то вводил такую же
-//нужно закончить хуйню сверху, написать алгоритм для обрабокт ситуаций когда длинная ссылка уже есть в бд
-        // написать алгоритм когда лимит на длинной ссылке в бд закончился и по колво и по времени,
-        //написать алгоритм для обработки коротких ссылок
-        //Важно!!! разобраться как записывать во время создания обекта класса shortenedlink не текущее время а время из первой записи по ссылке(скорее всего пегрузить конструктор)
-// суббота: сделал функцию переадресации, перегрузил конструктор шортенд линка чтобы привводе ориг ссылки в логе правильно писалось время создания
-//написал алгоритм когда длииная ссылка уже есть в бд
-//по алгаритму когда закончился лимит: надо написать метод мейна для пересоздания короткой ссылки
-//
-        final Long DAY_IN_LONG = (long)24*60*60*100;
-        Scanner scanner = new Scanner(System.in);
+    public static void main(String[] args) {
         Table table = new Table("data.csv");
+        table.getAllShortenedLinks();
 
         if (table.isEmpty()){
-            System.out.println("Эта программа предназначна для укорачивания ссылок...");
-
+            System.out.println("Эта программа предназначена для укорачивания ссылок...");
             firstContact(table);
-
         } else {
             notFirstContact(table);
         }
     }
-    public static ShortenedLink createShortenedLink(String originalLink){
+
+    public static ShortenedLink createShortenedLink(String originalLink){ // метод возвращает экземпляр класса ShortenedLink по данным, которые вводит пользователь
         Scanner scanner = new Scanner(System.in);
         User user = new User();
         user.generateUuid();
-        System.out.println(user.getUuid());
-
-
+        System.out.printf("Вам был присвоен UUID: %s", user.getUuid());
+        System.out.println();
         System.out.print("Введите лимит по использованию: ");
         int countLimit = scanner.nextInt();
         System.out.print("Введите лимит по времени: ");
         int timeLimit = scanner.nextInt();
         ShortenedLink shortenedLink = new ShortenedLink(user.getUuid(), originalLink, countLimit, timeLimit);
-        System.out.println(shortenedLink.getShortenURL());
-        System.out.println(shortenedLink.getUserUuid());
+        System.out.printf("Ваша короткая ссылка на ресурс: %s", shortenedLink.getShortenURL());
+        System.out.println();
         return shortenedLink;
     }
 
-    public static ShortenedLink createShortenedLink(String originalLink, String UserUuid){
+    public static ShortenedLink createShortenedLink(String originalLink, String UserUuid){ // перегрузка прошлого метода, в случае если мы берем ЮЮИД пользователя из бд, а не генерируем новый
         Scanner scanner = new Scanner(System.in);
         User user = new User(UserUuid);
-        System.out.println(user.getUuid());
-
-
         System.out.print("Введите лимит по использованию: ");
         int countLimit = scanner.nextInt();
         System.out.print("Введите лимит по времени: ");
         int timeLimit = scanner.nextInt();
         ShortenedLink shortenedLink = new ShortenedLink(user.getUuid(), originalLink, countLimit, timeLimit);
-        System.out.println(shortenedLink.getShortenURL());
-        System.out.println(shortenedLink.getUserUuid());
         return shortenedLink;
     }
 
-    public static void firstContact(Table table) throws URISyntaxException, IOException {
+    public static void firstContact(Table table) { // если для пользователя создается новый ЮЮИД и не нужно ничего проверять вызывается этот метод
         Scanner scanner = new Scanner(System.in);
-
         System.out.print("Введите ссылку: ");
         String originalLink = scanner.nextLine();
-
         ShortenedLink shortenedlink = createShortenedLink(originalLink);
-
         table.addRow(shortenedlink.getUserUuid(), shortenedlink.getOriginalURL(), shortenedlink.getShortenURL(), shortenedlink.getVisitLimit(), shortenedlink.getCreationTime(), shortenedlink.getExpirationTime());
-        LinkRedirektor(shortenedlink.getOriginalURL());
-        return;
-
+        LinkDirector(shortenedlink.getOriginalURL());
     }
-    public static void notFirstContact(Table table) throws URISyntaxException, IOException {
-        Scanner scanner = new Scanner(System.in);
-        Long lastSession = Long.valueOf(table.getData().get(table.getData().size()-1).get(4));
-        Instant instant = Instant.ofEpochMilli(lastSession);
-        String formattedDate = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault()).format(instant);
 
-        System.out.println("Хотите продолжить последний сеанс завершившийся " + formattedDate);
-        System.out.print("Да/Нет ");
+    public static String timeLongToTimestamp(Long time){ // метод для преобразования времени формата лонг в таймстемп
+        Instant instant = Instant.ofEpochMilli(time);
+        String formattedDate = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault()).format(instant);
+        return formattedDate;
+    }
+
+    public static void notFirstContact(Table table) { // если в бд уже есть записи
+        Scanner scanner = new Scanner(System.in);
+        long lastSession = Long.parseLong(table.getData().get(table.getData().size() - 1).get(4));
+        System.out.printf("Хотите продолжить последний сеанс(%s) Да/Нет: ", timeLongToTimestamp(lastSession));
         String decision = scanner.nextLine();
 
-        if (decision.equals("Да")){
+        if (decision.equalsIgnoreCase("да")){ // если пользователь хочет продолжить сессию по ЮЮИД из предыдущей сессии
 
             String userUuid = table.getData().get(table.getData().size()-1).get(0);
 
-            System.out.print("Введите ссылку: ");
+            System.out.print("Введите ссылку(вы можете ввести оригинальную ссылку на ресурс для получения короткой, или короткую для переадресации): ");
 
             String Link = scanner.nextLine();
 
             boolean isOriginal;
 
-            if(Link.startsWith("http://") | Link.startsWith("https://")){
+            if(Link.startsWith("http://") | Link.startsWith("https://")){ // проверяем какого формата ссылку ввел пользователь
                 isOriginal = true;
             } else if (Link.startsWith("clck.ru/")){
                 isOriginal = false;
@@ -116,45 +88,69 @@ public class Main {
                 System.out.println("Неверный формат ссылки.");
                 return;
             }
-            if (isOriginal){
-                if (table.getShortenedLink(userUuid, Link).equals("null")) {
-                    System.out.println("ссылки нет в бд");
+            if (isOriginal){ // если пользователь ввел длинную ссылку
+                if (table.getShortenedLink(userUuid, Link).equals("null")) { // Если такой ссылки привязанной к данному пользователю нет в нашей бд
                     ShortenedLink shortenedlink = createShortenedLink(Link, userUuid);
                     table.addRow(shortenedlink.getUserUuid(), shortenedlink.getOriginalURL(), shortenedlink.getShortenURL(), shortenedlink.getVisitLimit(), shortenedlink.getCreationTime(), shortenedlink.getExpirationTime());
-                    LinkRedirektor(shortenedlink.getOriginalURL());
-                    return;
-
-                } else {
-                    System.out.println("ссылка уже есть в бд");
+                    LinkDirector(shortenedlink.getOriginalURL());
+                } else { // Если такая ссылка уже есть (предполагаем, что пользователь хочет чтобы ему напомнили короткую ссылку, привязанную к той, которую он ввел)
                     String shortenedLink = table.getShortenedLink(userUuid, Link);
-                    if(table.countLinkUsage(userUuid, shortenedLink) == table.getShortenedLinkLimit(userUuid, shortenedLink)){
-                        System.out.println("лимит по количеству");
-                        System.out.println(table.countLinkUsage(userUuid, shortenedLink) + "использований");
-                        System.out.println(table.getShortenedLinkLimit(userUuid, shortenedLink) + "лимит");
-                    } else if (table.getExpirationTime(userUuid, shortenedLink) < System.currentTimeMillis()){
-                        System.out.println("лимит по времени");
-                        System.out.println(table.getExpirationTime(userUuid, shortenedLink) + "лимит");
-                        System.out.println(System.currentTimeMillis() + "сейчас");
-                    } else {
+                    if(table.countLinkUsage(userUuid, shortenedLink) == table.getShortenedLinkLimit(userUuid, shortenedLink)){ // проверяем, превышен ли лимит по кол-ву посещений
+                        System.out.printf("Превышен лимит по количеству использований для ссылки: %s(%s/%s использований)", shortenedLink, table.countLinkUsage(userUuid, shortenedLink), table.getShortenedLinkLimit(userUuid, shortenedLink));
+                        System.out.println();
+                        createNewLink(userUuid, Link, table);
+                    } else if (table.getExpirationTime(userUuid, shortenedLink) < System.currentTimeMillis()){ // проверяем, превышен ли лимит по времени
+                        System.out.printf("Превышен лимит по времени для ссылки: %s(действует до %s)", shortenedLink, timeLongToTimestamp(table.getExpirationTime(userUuid, shortenedLink)));
+                        System.out.println();
+//                        System.out.println(table.getExpirationTime(userUuid, shortenedLink) + "лимит");
+//                        System.out.println(System.currentTimeMillis() + "сейчас");
+                        createNewLink(userUuid, Link, table);
+                    } else { // если лимиты не превышены, то делаем запись в бд и переходим по ссылке
                         ShortenedLink shortenedLink1 = new ShortenedLink(userUuid, Link, shortenedLink, table.getShortenedLinkLimit(userUuid, shortenedLink), table.getCreationTime(userUuid, shortenedLink), table.getExpirationTime(userUuid, shortenedLink));
+                        System.out.printf("Ваша короткая ссылка на ресурс: %s", shortenedLink1.getShortenURL());
+                        System.out.println();
+                        System.out.print("Нажмите ENTER для переадресации: ");
+//                        scanner.nextLine();
+                        String string = scanner.nextLine();
+                        if(string.trim().isEmpty()){
+                            LinkDirector(Link);
+                        }
                         table.addRow(shortenedLink1.getUserUuid(), shortenedLink1.getOriginalURL(), shortenedLink1.getShortenURL(), shortenedLink1.getVisitLimit(), shortenedLink1.getCreationTime(), shortenedLink1.getExpirationTime());
-                        LinkRedirektor(Link);
                     }
-
-
                 }
-
-            } else if (!isOriginal) {
-                //для коротких ссылок написать алгоритм как для оригенальных
+            } else if (!isOriginal){ // если пользователь ввел созданную прогой короткую ссылку
+                String shortenedLink = Link;
+                String originalLink = table.getOriginalLink(userUuid, shortenedLink);
+                if(table.countLinkUsage(userUuid, shortenedLink) == table.getShortenedLinkLimit(userUuid, shortenedLink)){ // проверяем, превышен ли лимит по кол-ву посещений
+                    System.out.printf("Превышен лимит по количеству использований для ссылки: %s(%s/%s использований)", shortenedLink, table.countLinkUsage(userUuid, shortenedLink), table.getShortenedLinkLimit(userUuid, shortenedLink));
+                    System.out.println();
+                    createNewLink(userUuid, originalLink, table);
+                } else if (table.getExpirationTime(userUuid, shortenedLink) < System.currentTimeMillis()){ // проверяем, превышен ли лимит по времени
+                    System.out.printf("Превышен лимит по времени для ссылки: %s(%s)", shortenedLink, timeLongToTimestamp(table.getExpirationTime(userUuid, shortenedLink)));
+                    System.out.println();
+//                    System.out.println(table.getExpirationTime(userUuid, shortenedLink) + "лимит");
+//                    System.out.println(System.currentTimeMillis() + "сейчас");
+                    createNewLink(userUuid, originalLink, table);
+                } else { // если лимиты не превышены
+                    ShortenedLink shortenedLink1 = new ShortenedLink(userUuid, originalLink, shortenedLink, table.getShortenedLinkLimit(userUuid, shortenedLink), table.getCreationTime(userUuid, shortenedLink), table.getExpirationTime(userUuid, shortenedLink));
+                    System.out.print("Нажмите ENTER для переадресации: ");
+                    scanner.nextLine();
+                    String string = scanner.nextLine();
+                    if(string.trim().isEmpty()){
+                        LinkDirector(originalLink);
+                    }
+                    table.addRow(shortenedLink1.getUserUuid(), shortenedLink1.getOriginalURL(), shortenedLink1.getShortenURL(), shortenedLink1.getVisitLimit(), shortenedLink1.getCreationTime(), shortenedLink1.getExpirationTime());
+                    LinkDirector(originalLink);
+                }
+            } else {
+                System.out.println("Неверный формат ввода данных.");
+                return;
             }
-
-
+        } else { // если пользователь хочет начать новую сессию
+            firstContact(table);
         }
-
-
-
     }
-    public static void LinkRedirektor(String  originalLink) throws URISyntaxException, IOException {
+    public static void LinkDirector(String  originalLink) { // метод для перехода по ссылке
         try {
             Desktop desktop = Desktop.getDesktop();
             desktop.browse(new URI(originalLink)); // Переадресация по указанной ссылке
@@ -162,5 +158,24 @@ public class Main {
         } catch (IOException | URISyntaxException e) {
             System.out.println("Ошибка при попытке переадресации: " + e.getMessage());
         }
+    }
+
+    public static void createNewLink(String userUuid, String originalLink, Table table){ // метод для создания новой ссылки, если у старой закончился лимит
+        Scanner scanner1 = new Scanner(System.in);
+        System.out.println("Создаю новую короткую ссылку...");
+        System.out.print("Введите лимит по использованию: ");
+        int countLimit = scanner1.nextInt();
+        System.out.print("Введите лимит по времени: ");
+        int timeLimit = scanner1.nextInt();
+        ShortenedLink shortenedLink = new ShortenedLink(userUuid, originalLink, countLimit, timeLimit);
+        System.out.printf("Ваша новая ссылка на ресурс: %s", shortenedLink.getShortenURL());
+        System.out.println();
+        System.out.print("Нажмите ENTER для переадресации: ");
+        scanner1.nextLine();
+        String string = scanner1.nextLine();
+        if(string.trim().isEmpty()){
+            LinkDirector(originalLink);
+        }
+        table.addRow(shortenedLink.getUserUuid(), shortenedLink.getOriginalURL(), shortenedLink.getShortenURL(), shortenedLink.getVisitLimit(), shortenedLink.getCreationTime(), shortenedLink.getExpirationTime());
     }
 }

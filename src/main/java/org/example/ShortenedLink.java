@@ -1,10 +1,5 @@
 package org.example;
 
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 public class ShortenedLink {
     private String OriginalURL;
     private String ShortenURL;
@@ -12,8 +7,6 @@ public class ShortenedLink {
     private Long ExpirationTime;
     private Long CreationTime;
     private String UserUuid;
-   // final Long TIME = System.currentTimeMillis();
-   // final Long DAY = (long)24*60*60*100;
 
     public ShortenedLink(String UserUuid, String OriginalURL, int VisitLimit, int TimeLimit){
         this.OriginalURL = OriginalURL;
@@ -32,7 +25,6 @@ public class ShortenedLink {
         this.ExpirationTime = ExpirationTime;
         this.UserUuid = UserUuid;
     }
-
 
     public String getOriginalURL() {
         return OriginalURL;
@@ -59,12 +51,12 @@ public class ShortenedLink {
     }
 
     private String generateShortenedURL(){
-        return "clck.ru/" + Integer.toHexString(((int) Math.round(Math.random() * 1000000000))).toUpperCase();
-    }
+        Table table = new Table("data.csv");
+        String generatedLink;
+        do {
 
-    public List<String> getAttributes(){
-        List<String> attributes = Arrays.asList(UserUuid, OriginalURL, ShortenURL, String.valueOf(VisitLimit), String.valueOf(CreationTime), String.valueOf(ExpirationTime));
-        //String Uuid, String OriginalURL, String ShortenURL, int VisitLimit, long CreationTime, long ExpirationTime - список для передачи в метод addrow класса table
-        return attributes;
+            generatedLink = "clck.ru/" + Integer.toHexString(((int) Math.round(Math.random() * 1000000000))).toUpperCase();
+        } while (table.getAllShortenedLinks().contains(generatedLink));
+        return generatedLink;
     }
 }

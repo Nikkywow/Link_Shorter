@@ -1,9 +1,5 @@
 package org.example;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,12 +7,8 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Table {
-
-    public List<List<String>> data = new ArrayList<>();
-
+    private List<List<String>> data = new ArrayList<>();
     private String filePath;
-
-
 
     public Table(String filePath){
         this.filePath = filePath;
@@ -26,13 +18,10 @@ public class Table {
                 List<String> row = Arrays.asList(line.split(","));
                 data.add(row);
             }
-            System.out.println("Данные успешно загружены из файла.");
         } catch (IOException e) {
-            System.out.println("Ошибка при чтении файла: " + e.getMessage());
+            System.out.println("Ошибка: Файл отсутствует: " + e.getMessage());
         }
     }
-
-
 
     public void addRow(String Uuid, String OriginalURL, String ShortenURL, int VisitLimit, long CreationTime, long ExpirationTime) {
         try {
@@ -43,9 +32,8 @@ public class Table {
             bufferedWriter.close();
 
             data.add(row);
-            System.out.println("Данные загружены в файл");
         } catch (IOException e){
-            System.out.println("Данные не были записаны");
+            System.out.println("Ошибка: Данные не были записаны");
         }
     }
 
@@ -107,8 +95,6 @@ public class Table {
         return 333;
     }
 
-
-
     public Long getCreationTime(String userUuid, String shortenedLink){
         for(List<String> dataLine: data){
             if(dataLine.get(2).equals(shortenedLink) && dataLine.get(0).equals(userUuid)){
@@ -121,9 +107,6 @@ public class Table {
 
     public Long getExpirationTime(String userUuid, String shortenedLink){
         for(List<String> dataLine: data){
-            System.out.println(Long.valueOf(dataLine.get(5)) + "'это лог из таблицы");
-            System.out.println(dataLine.get(2) + " " + shortenedLink + "'это лог из таблицы");
-            System.out.println(dataLine.get(0) + " " + userUuid + "'это лог из таблицы");
             if(dataLine.get(2).equals(shortenedLink) && dataLine.get(0).equals(userUuid)){
                 Long expiration = Long.valueOf(dataLine.get(5));
                 return expiration;
@@ -132,4 +115,11 @@ public class Table {
         return 0L;
     }
 
+    public List<String> getAllShortenedLinks(){
+        List<String> shortenedListSet = new ArrayList<>();
+        for (List<String> dataLine: data){
+            shortenedListSet.add(dataLine.get(2));
+        }
+        return shortenedListSet;
+    }
 }
