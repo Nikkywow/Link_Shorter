@@ -54,8 +54,13 @@ public class Main {
         System.out.print("Введите ссылку: ");
         String originalLink = scanner.nextLine();
         ShortenedLink shortenedlink = createShortenedLink(originalLink);
+        System.out.print("Нажмите ENTER для переадресации: ");
+        //scanner.nextLine();
+        String string = scanner.nextLine();
+        if(string.trim().isEmpty()){
+            LinkDirector(originalLink);
+        }
         table.addRow(shortenedlink.getUserUuid(), shortenedlink.getOriginalURL(), shortenedlink.getShortenURL(), shortenedlink.getVisitLimit(), shortenedlink.getCreationTime(), shortenedlink.getExpirationTime());
-        LinkDirector(shortenedlink.getOriginalURL());
     }
 
     public static String timeLongToTimestamp(Long time){ // метод для преобразования времени формата лонг в таймстемп
@@ -134,13 +139,12 @@ public class Main {
                 } else { // если лимиты не превышены
                     ShortenedLink shortenedLink1 = new ShortenedLink(userUuid, originalLink, shortenedLink, table.getShortenedLinkLimit(userUuid, shortenedLink), table.getCreationTime(userUuid, shortenedLink), table.getExpirationTime(userUuid, shortenedLink));
                     System.out.print("Нажмите ENTER для переадресации: ");
-                    scanner.nextLine();
+                    //scanner.nextLine();
                     String string = scanner.nextLine();
                     if(string.trim().isEmpty()){
                         LinkDirector(originalLink);
                     }
                     table.addRow(shortenedLink1.getUserUuid(), shortenedLink1.getOriginalURL(), shortenedLink1.getShortenURL(), shortenedLink1.getVisitLimit(), shortenedLink1.getCreationTime(), shortenedLink1.getExpirationTime());
-                    LinkDirector(originalLink);
                 }
             } else {
                 System.out.println("Неверный формат ввода данных.");
