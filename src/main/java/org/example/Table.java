@@ -1,5 +1,8 @@
 package org.example;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,10 +11,9 @@ import java.util.Scanner;
 
 public class Table {
     private List<List<String>> data = new ArrayList<>();
-    private String filePath;
+    private final String filePath = "data.csv";
 
     public Table(String filePath){
-        this.filePath = filePath;
         try (Scanner scanner = new Scanner(new File(filePath))) {
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
@@ -19,7 +21,7 @@ public class Table {
                 data.add(row);
             }
         } catch (IOException e) {
-            System.out.println("Ошибка: Файл отсутствует: " + e.getMessage());
+            createCSV(filePath);
         }
     }
 
@@ -121,5 +123,16 @@ public class Table {
             shortenedListSet.add(dataLine.get(2));
         }
         return shortenedListSet;
+    }
+
+    private static void createCSV(String filepath) {
+        try {
+
+
+            CSVPrinter csvPrinter = new CSVPrinter(new FileWriter(filepath), CSVFormat.DEFAULT);
+            csvPrinter.print("");
+        } catch (IOException e) {
+            System.out.println("не выполнилось");
+        }
     }
 }
