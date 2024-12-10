@@ -14,7 +14,7 @@ public class Main {
         Table table = new Table("data.csv");
 
         if (table.isEmpty()){
-            System.out.println("Эта программа предназначена для укорачивания ссылок...");
+            System.out.println("Приветствую! Данная программа предназначена для работы с короткими ссылками.");
             firstContact(table);
         } else {
             notFirstContact(table);
@@ -29,7 +29,7 @@ public class Main {
         System.out.println();
         System.out.print("Введите лимит по количеству использований ссылки: ");
         int countLimit = scanner.nextInt();
-        System.out.print("Введите лимит по времени использования ссылки: ");
+        System.out.print("Введите лимит по времени(в днях): ");
         int timeLimit = scanner.nextInt();
         ShortenedLink shortenedLink = new ShortenedLink(user.getUuid(), originalLink, countLimit, timeLimit);
         System.out.printf("Ваша короткая ссылка на ресурс: %s", shortenedLink.getShortenURL());
@@ -40,9 +40,9 @@ public class Main {
     public static ShortenedLink createShortenedLink(String originalLink, String UserUuid){ // перегрузка прошлого метода, в случае если мы берем ЮЮИД пользователя из бд, а не генерируем новый
         Scanner scanner = new Scanner(System.in);
         User user = new User(UserUuid);
-        System.out.print("Введите лимит по использованию: ");
+        System.out.print("Введите лимит по количеству использований ссылки: ");
         int countLimit = scanner.nextInt();
-        System.out.print("Введите лимит по времени: ");
+        System.out.print("Введите лимит по времени(в днях): ");
         int timeLimit = scanner.nextInt();
         ShortenedLink shortenedLink = new ShortenedLink(user.getUuid(), originalLink, countLimit, timeLimit);
         return shortenedLink;
@@ -163,7 +163,7 @@ public class Main {
         System.out.println("Создаю новую короткую ссылку...");
         System.out.print("Введите лимит по количеству использований ссылки: ");
         int countLimit = scanner1.nextInt();
-        System.out.print("Введите лимит по времени использования ссылки: ");
+        System.out.print("Введите лимит по времени использования ссылки(в днях): ");
         int timeLimit = scanner1.nextInt();
         ShortenedLink shortenedLink = new ShortenedLink(userUuid, originalLink, countLimit, timeLimit);
         System.out.printf("Ваша новая ссылка на ресурс: %s", shortenedLink.getShortenURL());
