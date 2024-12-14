@@ -71,7 +71,7 @@ public class Main {
     public static void notFirstContact(Table table) { // если в бд уже есть записи
         Scanner scanner = new Scanner(System.in);
         long lastSession = Long.parseLong(table.getData().get(table.getData().size() - 1).get(4));
-        System.out.printf("Хотите продолжить последний сеанс(%s) Да/Нет: ", timeLongToTimestamp(lastSession));
+        System.out.printf("Хотите продолжить последний сеанс(%s) Да/Нет: ", timeLongToTimestamp((Long) lastSession));
         String decision = scanner.nextLine();
 
         if (decision.equalsIgnoreCase("да")){ // если пользователь хочет продолжить сессию по ЮЮИД из предыдущей сессии
@@ -95,7 +95,7 @@ public class Main {
                 } else { // Если такая ссылка уже есть (предполагаем, что пользователь хочет чтобы ему напомнили короткую ссылку, привязанную к той, которую он ввел)
                     String shortenedLink = table.getShortenedLink(userUuid, Link);
                     if(table.countLinkUsage(userUuid, shortenedLink) == table.getShortenedLinkLimit(userUuid, shortenedLink)){ // проверяем, превышен ли лимит по кол-ву посещений
-                        System.out.printf("Превышен лимит по количеству использований для ссылки: %s(%s/%s использований)", shortenedLink, table.countLinkUsage(userUuid, shortenedLink), table.getShortenedLinkLimit(userUuid, shortenedLink));
+                        System.out.printf("Превышен лимит по количеству использований для ссылки: %s(%s/%s использований)", shortenedLink, String.valueOf(table.countLinkUsage(userUuid, shortenedLink)), String.valueOf(table.getShortenedLinkLimit(userUuid, shortenedLink)));
                         System.out.println();
                         createNewLink(userUuid, Link, table);
                     } else if (table.getExpirationTime(userUuid, shortenedLink) < System.currentTimeMillis()){ // проверяем, превышен ли лимит по времени
@@ -121,7 +121,7 @@ public class Main {
                 String shortenedLink = Link;
                 String originalLink = table.getOriginalLink(userUuid, shortenedLink);
                 if(table.countLinkUsage(userUuid, shortenedLink) == table.getShortenedLinkLimit(userUuid, shortenedLink)){ // проверяем, превышен ли лимит по кол-ву посещений
-                    System.out.printf("Превышен лимит по количеству использований для ссылки: %s(%s/%s использований)", shortenedLink, table.countLinkUsage(userUuid, shortenedLink), table.getShortenedLinkLimit(userUuid, shortenedLink));
+                    System.out.printf("Превышен лимит по количеству использований для ссылки: %s(%s/%s использований)", shortenedLink, String.valueOf(table.countLinkUsage(userUuid, shortenedLink)), String.valueOf(table.getShortenedLinkLimit(userUuid, shortenedLink)));
                     System.out.println();
                     createNewLink(userUuid, originalLink, table);
                 } else if (table.getExpirationTime(userUuid, shortenedLink) < System.currentTimeMillis()){ // проверяем, превышен ли лимит по времени
